@@ -1,0 +1,355 @@
+{% comment %}
+  Dealer Catalog Page Template
+  File: templates/page.dealer-catalog.liquid
+{% endcomment %}
+
+<div class="page-width">
+  {% if customer and customer.tags contains 'dealer_approved' %}
+    <!-- Approved Dealer - Show Catalog -->
+    <header class="section-header text-center">
+      <h1>{{ page.title }}</h1>
+      <p>Exclusive dealer pricing - Welcome {{ customer.first_name }}!</p>
+    </header>
+
+    <div class="dealer-catalog-nav">
+      <a href="/pages/dealer-portal" class="btn btn--secondary">← Back to Dealer Portal</a>
+      <div class="dealer-status">
+        <span class="status-badge">✓ Approved Dealer</span>
+      </div>
+    </div>
+
+    {% comment %} Get the Dealer Pricing collection {% endcomment %}
+    {% assign dealer_collection = collections['dealer-pricing'] %}
+    
+    {% if dealer_collection.products.size > 0 %}
+      <div class="collection-description">
+        <p><strong>{{ dealer_collection.products.size }} exclusive products</strong> available at dealer pricing</p>
+        {% if dealer_collection.description != blank %}
+          <p>{{ dealer_collection.description }}</p>
+        {% endif %}
+      </div>
+
+      <div class="product-grid">
+        {% for product in dealer_collection.products %}
+          <div class="product-item">
+            <div class="product-image">
+              {% if product.featured_image %}
+                <a href="{{ product.url }}">
+                  <img src="{{ product.featured_image | img_url: '300x300' }}" 
+                       alt="{{ product.featured_image.alt | escape }}"
+                       loading="lazy">
+                </a>
+              {% else %}
+                <div class="no-image">No Image</div>
+              {% endif %}
+            </div>
+            
+            <div class="product-info">
+              <h3 class="product-title">
+                <a href="{{ product.url }}">{{ product.title }}</a>
+              </h3>
+              
+              {% if product.description != blank %}
+                <p class="product-description">{{ product.description | strip_html | truncate: 100 }}</p>
+              {% endif %}
+              
+              <div class="product-price">
+                {% if product.compare_at_price > product.price %}
+                  <span class="price-compare">Regular: {{ product.compare_at_price | money }}</span>
+                  <span class="price-dealer">Dealer: {{ product.price | money }}</span>
+                  <span class="savings">Save {{ product.compare_at_price | minus: product.price | money }}!</span>
+                {% else %}
+                  <span class="price-dealer">Dealer Price: {{ product.price | money }}</span>
+                {% endif %}
+              </div>
+              
+              <div class="product-actions">
+                <a href="{{ product.url }}" class="btn btn--secondary btn--small">View Details</a>
+                {% unless product.available %}
+                  <span class="sold-out">Sold Out</span>
+                {% endunless %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="dealer-notes">
+        <h3>Dealer Information</h3>
+        <ul>
+          <li><strong>Minimum Order:</strong> Contact for minimum order requirements</li>
+          <li><strong>Payment Terms:</strong> Net 30 for approved dealers</li>
+          <li><strong>Shipping:</strong> Free shipping on orders over $500</li>
+          <li><strong>Support:</strong> Priority dealer support available</li>
+        </ul>
+        
+        <div class="contact-dealer-support">
+          <h4>Need Help?</h4>
+          <p><strong>Dealer Support:</strong> 1-800-XXX-XXXX | dealers@yourstore.com</p>
+        </div>
+      </div>
+
+    {% else %}
+      <div class="empty-collection">
+        <h2>Dealer catalog is being updated</h2>
+        <p>We're currently updating our dealer product catalog. Please check back soon or contact dealer support.</p>
+        <p><a href="/pages/dealer-portal" class="btn">Return to Dealer Portal</a></p>
+      </div>
+    {% endif %}
+
+  {% elsif customer and customer.tags contains 'dealer_pending' %}
+    <!-- Pending Approval -->
+    <header class="section-header text-center">
+      <h1>Access Pending</h1>
+    </header>
+    
+    <div class="access-denied">
+      <div class="note note--warning">
+        <h2>⏳ Application Under Review</h2>
+        <p>Your dealer application is currently being reviewed. You'll receive email notification once approved.</p>
+        <p><a href="/pages/dealer-portal" class="btn">Back to Dealer Portal</a></p>
+      </div>
+    </div>
+
+  {% elsif customer %}
+    <!-- Regular Customer - No Dealer Status -->
+    <header class="section-header text-center">
+      <h1>Dealer Access Required</h1>
+    </header>
+    
+    <div class="access-denied">
+      <div class="note note--info">
+        <h2>🔒 This catalog requires dealer approval</h2>
+        <p>To access our dealer catalog and wholesale pricing, you need to apply for dealer status.</p>
+        <p><a href="/pages/become-a-dealer" class="btn btn--primary">Apply for Dealer Access</a></p>
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Not Logged In -->
+    <header class="section-header text-center">
+      <h1>Login Required</h1>
+    </header>
+    
+    <div class="access-denied">
+      <div class="note note--info">
+        <h2>🔐 Please log in to continue</h2>
+        <p>This catalog is available to approved dealers only.</p>
+        <div class="login-actions">
+          <a href="/account/login" class="btn btn--primary">Login</a>
+          <a href="/pages/become-a-dealer" class="btn btn--secondary">Apply for Dealer Access</a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+.dealer-catalog-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem 0 2rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.status-badge {
+  background: #28a745;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.collection-description {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.product-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  transition: box-shadow 0.3s ease;
+}
+
+.product-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.product-image {
+  position: relative;
+  padding-bottom: 75%; /* 4:3 Aspect Ratio */
+}
+
+.product-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  color: #666;
+}
+
+.product-info {
+  padding: 1rem;
+}
+
+.product-title a {
+  color: #333;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.product-title a:hover {
+  color: #007bff;
+}
+
+.product-description {
+  font-size: 0.9em;
+  color: #666;
+  margin: 0.5rem 0;
+}
+
+.product-price {
+  margin: 1rem 0;
+}
+
+.price-compare {
+  display: block;
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.9em;
+}
+
+.price-dealer {
+  display: block;
+  font-weight: bold;
+  color: #28a745;
+  font-size: 1.1em;
+}
+
+.savings {
+  display: block;
+  color: #dc3545;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.product-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn--small {
+  padding: 0.5rem 1rem;
+  font-size: 0.9em;
+}
+
+.sold-out {
+  color: #dc3545;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.dealer-notes {
+  background: #e8f5e8;
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 3rem 0;
+}
+
+.dealer-notes ul {
+  margin: 1rem 0;
+}
+
+.contact-dealer-support {
+  background: white;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.access-denied {
+  max-width: 600px;
+  margin: 2rem auto;
+  text-align: center;
+}
+
+.note {
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+.note--warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+.note--info {
+  background-color: #d1ecf1;
+  border: 1px solid #bee5eb;
+  color: #0c5460;
+}
+
+.login-actions {
+  margin-top: 1rem;
+}
+
+.login-actions .btn {
+  margin: 0 0.5rem;
+}
+
+.empty-collection {
+  text-align: center;
+  margin: 3rem 0;
+}
+
+@media (max-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  
+  .dealer-catalog-nav {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .login-actions .btn {
+    display: block;
+    margin: 0.5rem 0;
+  }
+}
+</style>
